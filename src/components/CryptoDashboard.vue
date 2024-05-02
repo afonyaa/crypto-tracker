@@ -39,7 +39,7 @@ export default {
     handleAddNewTicker(tickerName) {
       const newTicker = {
         name: tickerName,
-        price: '-',
+        price: null,
       };
       this.tickers = [...this.tickers, newTicker];
       const addedTicker = this.tickers.find((ticker) => ticker.name === newTicker.name);
