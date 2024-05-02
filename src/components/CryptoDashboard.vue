@@ -37,6 +37,7 @@ export default {
       const newTicker = {
         name: tickerName,
         price: null,
+        error: false,
       };
       this.tickers = [...this.tickers, newTicker];
       const addedTicker = this.tickers.find((ticker) => ticker.name === newTicker.name);
@@ -53,9 +54,10 @@ export default {
       });
     },
     subscribeToTickerUpdates(ticker) {
-      const listener = (price) => {
+      const listener = ({ price, error }) => {
         if (ticker) {
           ticker.price = price;
+          ticker.error = error;
         }
       };
       tickerSubscriber.subscribeToTickerUpdates(ticker.name, listener);

@@ -7,8 +7,8 @@ class WorkerTickerListener {
     const worker = new SharedWorker('shareTickersPricesWorker.js');
     this.port = worker.port;
   }
-  broadcastNewPrice({ tickerName, price }) {
-    this.port.postMessage({ tickerName, price });
+  broadcastNewPrice({ tickerName, price, error }) {
+    this.port.postMessage({ tickerName, price, error });
   }
 }
 
@@ -35,26 +35,48 @@ class WSTickerListener {
     );
   }
 
-  notifySubscribers(subscribers, { tickerName, price }) {
+  notifySubscribers(subscribers, { tickerName, price, error }) {
     const handlers = subscribers.get(tickerName) ?? [];
-    handlers.forEach((handler) => handler(price));
+    handlers.forEach((handler) => handler({ price, error }));
   }
 
-  activateIncomingEventsListener(tickerListeners) {
+  activateIncomingEventsListener(subscribers) {
     this.socket.addEventListener('message', (e) => {
       const AGGREGATE_INDEX = '5';
       const MULTIPLE_SOCKETS_ERROR = '429';
+      const INVALID_SUB = '500';
 
-      const { TYPE: type, FROMSYMBOL: tickerName, PRICE: price } = JSON.parse(e.data);
+      const {
+        TYPE: type,
+        FROMSYMBOL: tickerName,
+        PRICE: price,
+        PARAMETER: tickerNameInCaseOfError,
+      } = JSON.parse(e.data);
 
-      if (type === AGGREGATE_INDEX) {
-        this.worker.broadcastNewPrice({ tickerName, price });
-        this.notifySubscribers(tickerListeners, { tickerName, price });
+      const isErrorWhileRetrievingPrice = type === INVALID_SUB;
+      let tickerNameInCaseOfErrorParsed =
+        tickerNameInCaseOfError && tickerNameInCaseOfError.split('~')?.[2];
+
+      if (type === AGGREGATE_INDEX || isErrorWhileRetrievingPrice) {
+        this.worker.broadcastNewPrice({
+          tickerName: tickerName,
+          price,
+          error: isErrorWhileRetrievingPrice,
+        });
+        this.notifySubscribers(subscribers, {
+          tickerName: tickerName || tickerNameInCaseOfErrorParsed,
+          price,
+          error: isErrorWhileRetrievingPrice,
+        });
       }
       if (type === MULTIPLE_SOCKETS_ERROR) {
         this.worker.port.onmessage = (e) => {
           const { tickerName, price } = e.data;
-          this.notifySubscribers(tickerListeners, { tickerName, price });
+          this.notifySubscribers(subscribers, {
+            tickerName: tickerName,
+            price,
+            error: isErrorWhileRetrievingPrice,
+          });
         };
       }
     });

@@ -4,12 +4,13 @@
       v-for="ticker of tickers"
       :key="ticker.name"
       class="bg-gray-400 rounded-lg shadow-lg p-8 text-center"
+      :class="{ 'bg-red-300': ticker.error }"
     >
       <h1 class="text-lg font-bold text-white mb-4">{{ ticker.name }} - USD</h1>
       <p class="text-md text-white mb-8">{{ formatTickerPrice(ticker.price) }}</p>
       <button
         @click="$emit('removeTicker', ticker)"
-        class="bg-white hover:bg-gray-100 text-gray-800 text-xs font-semibold py-2 px-4 border border-gray-400 rounded"
+        class="bg-white hover:bg-gray-100 text-gray-500 text-xs font-semibold py-2 px-4 rounded"
       >
         Remove
       </button>
