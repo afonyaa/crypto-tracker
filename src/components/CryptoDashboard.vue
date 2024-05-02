@@ -9,6 +9,10 @@
 import AddTicker from './AddTicker.vue';
 import TickersList from './TickersList.vue';
 import { tickersStorage } from '@/storage/persistedStorage';
+import {
+  subscribeToTickerUpdates as subscribeToTickerUpdatesFromAPI,
+  unsubscribeToTickerUpdates as unsubscribeToTickerUpdatesFromAPI,
+} from '@/api/tickerUpdater';
 
 export default {
   name: 'CryptoDashboard',
@@ -16,12 +20,14 @@ export default {
   data() {
     return {
       tickers: [],
+      tickerUpdateSubscribers: [],
     };
   },
   mounted() {
     tickersStorage.retrieveItems();
     if (tickersStorage.items) {
       this.tickers = tickersStorage.items;
+      this.activateSubscriptionForAllTickers();
     }
   },
   watch: {
@@ -36,9 +42,33 @@ export default {
         price: '-',
       };
       this.tickers = [...this.tickers, newTicker];
+      const addedTicker = this.tickers.find((ticker) => ticker.name === newTicker.name);
+      this.subscribeToTickerUpdates(addedTicker);
     },
     handleRemoveTicker(tickerToRemove) {
+      this.unsubscribeToTickerUpdates();
       this.tickers = this.tickers.filter((ticker) => ticker !== tickerToRemove);
+    },
+    activateSubscriptionForAllTickers() {
+      this.tickerUpdateSubscribers = [];
+      this.tickers.forEach((ticker) => {
+        this.subscribeToTickerUpdates(ticker);
+      });
+    },
+    subscribeToTickerUpdates(ticker) {
+      const listener = (price) => {
+        if (ticker) {
+          ticker.price = price;
+        }
+      };
+      subscribeToTickerUpdatesFromAPI(ticker.name, listener);
+      this.tickerUpdateSubscribers.push({ name: ticker.name, listener });
+    },
+    unsubscribeToTickerUpdates(tickerToUnsubscribe) {
+      const subscriber = this.tickerUpdateSubscribers.find(
+        (subscriber) => subscriber.name === tickerToUnsubscribe.name,
+      );
+      unsubscribeToTickerUpdatesFromAPI(subscriber.name, subscriber.listener);
     },
   },
 };
