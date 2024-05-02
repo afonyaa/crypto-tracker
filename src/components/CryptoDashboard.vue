@@ -46,7 +46,7 @@ export default {
       this.subscribeToTickerUpdates(addedTicker);
     },
     handleRemoveTicker(tickerToRemove) {
-      this.unsubscribeToTickerUpdates();
+      this.unsubscribeToTickerUpdates(tickerToRemove);
       this.tickers = this.tickers.filter((ticker) => ticker !== tickerToRemove);
     },
     activateSubscriptionForAllTickers() {
