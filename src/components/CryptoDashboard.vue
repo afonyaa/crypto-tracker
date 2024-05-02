@@ -8,6 +8,7 @@
 <script>
 import AddTicker from './AddTicker.vue';
 import TickersList from './TickersList.vue';
+import { tickersStorage } from '@/storage/persistedStorage';
 
 export default {
   name: 'CryptoDashboard',
@@ -18,7 +19,15 @@ export default {
     };
   },
   mounted() {
-    this.tickers = [];
+    tickersStorage.retrieveItems();
+    if (tickersStorage.items) {
+      this.tickers = tickersStorage.items;
+    }
+  },
+  watch: {
+    tickers() {
+      tickersStorage.setItems(this.tickers);
+    },
   },
   methods: {
     handleAddNewTicker(tickerName) {

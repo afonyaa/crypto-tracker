@@ -1,9 +1,11 @@
-import { API_KEY } from '@/api/constants';
+import { API_KEY, REST_URL } from '@/api/constants';
 
-//todo search params
-
-export default () =>
-  fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=false&api_key=${API_KEY}`)
+export default () => {
+  const tickersListURL = new URL(REST_URL);
+  tickersListURL.pathname = 'data/all/coinlist';
+  tickersListURL.searchParams.append('summary', 'false');
+  tickersListURL.searchParams.append('api_key', API_KEY);
+  return fetch(tickersListURL.href)
     .then((res) => {
       return res.json();
     })
@@ -14,3 +16,4 @@ export default () =>
         return Object.values(res.Data).map((currency) => currency.Name);
       }
     });
+};
