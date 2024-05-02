@@ -9,10 +9,7 @@
 import AddTicker from './AddTicker.vue';
 import TickersList from './TickersList.vue';
 import { tickersStorage } from '@/storage/persistedStorage';
-import {
-  subscribeToTickerUpdates as subscribeToTickerUpdatesFromAPI,
-  unsubscribeToTickerUpdates as unsubscribeToTickerUpdatesFromAPI,
-} from '@/api/tickerUpdater';
+import { tickerSubscriber } from '@/api/tickerUpdater';
 
 export default {
   name: 'CryptoDashboard',
@@ -61,14 +58,14 @@ export default {
           ticker.price = price;
         }
       };
-      subscribeToTickerUpdatesFromAPI(ticker.name, listener);
+      tickerSubscriber.subscribeToTickerUpdates(ticker.name, listener);
       this.tickerUpdateSubscribers.push({ name: ticker.name, listener });
     },
     unsubscribeToTickerUpdates(tickerToUnsubscribe) {
       const subscriber = this.tickerUpdateSubscribers.find(
         (subscriber) => subscriber.name === tickerToUnsubscribe.name,
       );
-      unsubscribeToTickerUpdatesFromAPI(subscriber.name, subscriber.listener);
+      tickerSubscriber.unsubscribeToTickerUpdates(subscriber.name, subscriber.listener);
     },
   },
 };

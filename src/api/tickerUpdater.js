@@ -1,62 +1,67 @@
-import { API_KEY, WS_URL } from '@/api/constants';
+import { ADD_TICKER_TO_WS_LISTEN, REMOVE_TICKER_TO_WS_LISTEN } from '@/api/constants';
+import { getWSUrl } from '@/api/utils';
 
-/** Logic with websockets */
-const wsUrl = new URL(WS_URL);
+class WSTicketListener {
+  socket;
 
-wsUrl.pathname = 'v2';
-wsUrl.searchParams.append('api_key', API_KEY);
-
-const socket = new WebSocket(wsUrl);
-
-const ADD_TICKER_TO_WS_LISTEN = 'SubAdd';
-const REMOVE_TICKER_TO_WS_LISTEN = 'SubRemove';
-
-const sendMessageToWS = (tickerName, action) => {
-  const message = JSON.stringify({ action: action, subs: [`5~CCCAGG~${tickerName}~USD`] });
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(message);
+  constructor(url) {
+    this.socket = new WebSocket(url);
   }
-  socket.addEventListener(
-    'open',
-    () => {
-      socket.send(message);
-    },
-    { once: true },
-  );
-};
 
-/** Логика, которая на стыке с прослушиванием сокетов и работой с подписчиками */
-const AGGREGATE_INDEX = '5';
-socket.addEventListener('message', (e) => {
-  const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(e.data);
-  if (type !== AGGREGATE_INDEX) {
-    return;
+  sendMessage(tickerName, action) {
+    const message = JSON.stringify({ action: action, subs: [`5~CCCAGG~${tickerName}~USD`] });
+    if (this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(message);
+    }
+    this.socket.addEventListener(
+      'open',
+      () => {
+        this.socket.send(message);
+      },
+      { once: true },
+    );
   }
-  // стык здесь
-  const handlers = tickerListeners.get(currency) ?? [];
-  handlers.forEach((handler) => handler(newPrice));
-});
 
-/** Логика по работе со слушателями событий */
-const tickerListeners = new Map();
-
-export const subscribeToTickerUpdates = (tickerName, listener) => {
-  const listeners = tickerListeners.get(tickerName);
-  if (listeners) {
-    listeners.push(listener);
-  } else {
-    tickerListeners.set(tickerName, [listener]);
-    sendMessageToWS(tickerName, ADD_TICKER_TO_WS_LISTEN);
+  startListening(tickerListeners) {
+    this.socket.addEventListener('message', (e) => {
+      const AGGREGATE_INDEX = '5';
+      const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(e.data);
+      if (type !== AGGREGATE_INDEX) {
+        return;
+      }
+      const handlers = tickerListeners.get(currency) ?? [];
+      handlers.forEach((handler) => handler(newPrice));
+    });
   }
-};
+}
 
-export const unsubscribeToTickerUpdates = (tickerName, unsubscribeListener) => {
-  const listeners = tickerListeners.get(tickerName);
-  tickerListeners.set(
-    tickerName,
-    listeners.filter((listener) => listener !== unsubscribeListener),
-  );
-  if (!tickerListeners.get(tickerName).length) {
-    sendMessageToWS(tickerName, REMOVE_TICKER_TO_WS_LISTEN);
+class TickerSubscriber {
+  wsTickerListener = new WSTicketListener(getWSUrl());
+  tickerListeners = new Map();
+
+  constructor() {
+    this.wsTickerListener.startListening(this.tickerListeners);
   }
-};
+
+  subscribeToTickerUpdates = (tickerName, listener) => {
+    const listeners = this.tickerListeners.get(tickerName);
+    if (listeners) {
+      listeners.push(listener);
+    } else {
+      this.tickerListeners.set(tickerName, [listener]);
+      this.wsTickerListener.sendMessage(tickerName, ADD_TICKER_TO_WS_LISTEN);
+    }
+  };
+  unsubscribeToTickerUpdates = (tickerName, unsubscribeListener) => {
+    const listeners = this.tickerListeners.get(tickerName);
+    this.tickerListeners.set(
+      tickerName,
+      listeners.filter((listener) => listener !== unsubscribeListener),
+    );
+    if (!this.tickerListeners.get(tickerName).length) {
+      this.wsTickerListener.sendMessage(tickerName, REMOVE_TICKER_TO_WS_LISTEN);
+    }
+  };
+}
+
+export const tickerSubscriber = new TickerSubscriber();
