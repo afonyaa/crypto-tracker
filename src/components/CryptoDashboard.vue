@@ -1,7 +1,7 @@
 <template>
   <section class="container mx-auto flex flex-col p-4">
     <AddTicker @new-ticker="handleAddNewTicker" :tickers-to-skip="tickers" />
-    <TickersList :tickers="tickers" />
+    <TickersList :tickers="tickers" @remove-ticker="handleRemoveTicker" />
   </section>
 </template>
 
@@ -17,6 +17,9 @@ export default {
       tickers: [],
     };
   },
+  mounted() {
+    this.tickers = [];
+  },
   methods: {
     handleAddNewTicker(tickerName) {
       const newTicker = {
@@ -24,6 +27,9 @@ export default {
         price: '-',
       };
       this.tickers = [...this.tickers, newTicker];
+    },
+    handleRemoveTicker(tickerToRemove) {
+      this.tickers = this.tickers.filter((ticker) => ticker !== tickerToRemove);
     },
   },
 };

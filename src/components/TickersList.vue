@@ -7,6 +7,12 @@
     >
       <h1 class="text-lg font-bold text-white mb-4">{{ ticker.name }} - USD</h1>
       <p class="text-md text-white mb-8">-</p>
+      <button
+        @click="$emit('removeTicker', ticker)"
+        class="bg-white hover:bg-gray-100 text-gray-800 text-xs font-semibold py-2 px-4 border border-gray-400 rounded"
+      >
+        Remove
+      </button>
     </div>
   </dl>
 </template>
@@ -14,6 +20,7 @@
 <script>
 export default {
   name: 'TickersList',
+  emits: ['removeTicker'],
   props: {
     tickers: [Object],
   },
