@@ -7,7 +7,7 @@
       @remove-ticker="handleRemoveTicker"
       @select-ticker="handleSelectTicker"
     />
-    <TickerLegend :ticker-name="selectedTicker?.name" />
+    <TickerLegend v-if="selectedTicker" :ticker-name="selectedTicker?.name" />
   </section>
 </template>
 

@@ -40,6 +40,7 @@ export default {
     }
   },
   beforeUnmount() {
+    tickerSubscriber.unsubscribeToTickerUpdates(this.tickerName, this.subscriberForTickerPrice);
     window.removeEventListener('resize', this.calculateMaxGraphElements);
   },
   computed: {
@@ -81,6 +82,7 @@ export default {
           tickerSubscriber.unsubscribeToTickerUpdates(prev, this.subscriberForTickerPrice);
         }
       },
+      immediate: true,
     },
   },
 };
