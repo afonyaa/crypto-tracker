@@ -10,7 +10,6 @@
       <div
         v-for="(pricePercentage, idx) of priceHistoryNormalized"
         :key="idx"
-        ref="chartBar"
         class="bg-cyan-400 w-10"
         :style="{ height: `${pricePercentage}%` }"
       />
