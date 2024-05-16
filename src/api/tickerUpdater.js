@@ -93,7 +93,7 @@ class TickerSubscriber {
 
   subscribeToTickerUpdates = (tickerName, listener) => {
     const listeners = this.tickerListeners.get(tickerName);
-    if (listeners) {
+    if (listeners?.length > 0) {
       listeners.push(listener);
     } else {
       this.tickerListeners.set(tickerName, [listener]);

@@ -3,13 +3,14 @@
     <div
       v-for="ticker of tickers"
       :key="ticker.name"
-      class="bg-gray-400 rounded-lg shadow-lg p-8 text-center"
-      :class="{ 'bg-red-300': ticker.error }"
+      class="bg-gray-400 rounded-lg shadow-lg p-8 text-center cursor-pointer"
+      :class="{ 'bg-red-300': ticker.error, 'outline outline-2 outline-cyan-500': selected === ticker }"
+      @click="$emit('selectTicker', ticker)"
     >
       <h1 class="text-lg font-bold text-white mb-4">{{ ticker.name }} - USD</h1>
       <p class="text-md text-white mb-8">{{ formatTickerPrice(ticker.price) }}</p>
       <button
-        @click="$emit('removeTicker', ticker)"
+        @click.stop="$emit('removeTicker', ticker)"
         class="bg-white hover:bg-gray-100 text-gray-500 text-xs font-semibold py-2 px-4 rounded"
       >
         Remove
@@ -21,9 +22,10 @@
 <script>
 export default {
   name: 'TickersList',
-  emits: ['removeTicker'],
+  emits: ['removeTicker', 'selectTicker'],
   props: {
     tickers: [Object],
+    selected: Object,
   },
   methods: {
     formatTickerPrice(tickerPrice) {

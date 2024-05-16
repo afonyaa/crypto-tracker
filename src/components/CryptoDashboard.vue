@@ -1,7 +1,13 @@
 <template>
   <section class="container mx-auto flex flex-col p-4">
     <AddTicker @new-ticker="handleAddNewTicker" :tickers-to-skip="tickers" />
-    <TickersList :tickers="tickers" @remove-ticker="handleRemoveTicker" />
+    <TickersList
+      :tickers="tickers"
+      :selected="selectedTicker"
+      @remove-ticker="handleRemoveTicker"
+      @select-ticker="handleSelectTicker"
+    />
+    <TickerLegend :ticker-name="selectedTicker?.name" />
   </section>
 </template>
 
@@ -10,14 +16,16 @@ import AddTicker from './AddTicker.vue';
 import TickersList from './TickersList.vue';
 import { tickersStorage } from '@/storage/persistedStorage';
 import { tickerSubscriber } from '@/api/tickerUpdater';
+import TickerLegend from '@/components/TickerLegend.vue';
 
 export default {
   name: 'CryptoDashboard',
-  components: { TickersList, AddTicker },
+  components: { TickerLegend, TickersList, AddTicker },
   data() {
     return {
       tickers: [],
       tickerUpdateSubscribers: [],
+      selectedTicker: null,
     };
   },
   mounted() {
@@ -33,6 +41,9 @@ export default {
     },
   },
   methods: {
+    handleSelectTicker(ticker) {
+      this.selectedTicker = ticker;
+    },
     handleAddNewTicker(tickerName) {
       const newTicker = {
         name: tickerName,
@@ -45,6 +56,9 @@ export default {
     },
     handleRemoveTicker(tickerToRemove) {
       this.unsubscribeToTickerUpdates(tickerToRemove);
+      if (this.selectedTicker === tickerToRemove) {
+        this.selectedTicker = null;
+      }
       this.tickers = this.tickers.filter((ticker) => ticker !== tickerToRemove);
     },
     activateSubscriptionForAllTickers() {

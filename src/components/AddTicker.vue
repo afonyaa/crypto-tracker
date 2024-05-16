@@ -13,7 +13,7 @@
           @keydown.enter="addTicker"
           v-model="ticker"
           type="text"
-          class="block rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-inset sm:text-sm sm:leading-6"
+          class="focus:outline-1 outline-cyan-500 block rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-1 focus:ring-inset sm:text-sm sm:leading-6"
           placeholder="Example: BTC"
         />
       </div>
